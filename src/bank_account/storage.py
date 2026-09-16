@@ -33,6 +33,6 @@ class JsonStorage:
         """Сохраняет исключительно актуальные сведения о балансе."""
         db = self.load_all()
         db[account.owner] = {
-            "balance": account.get_balance()
+            "balance": account.balance
         }
         self.save_all(db)

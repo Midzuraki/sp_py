@@ -8,7 +8,7 @@ def print_summary(accounts: list[BankAccount]) -> None:
     print("СВОДКА ПО СЧЕТАМ")
     print("==================================================")
     for acc in accounts:
-        print(f"{acc.owner:<10} | {acc.get_balance():>10.2f}")
+        print(f"{acc.owner:<10} | {acc.balance > 10.2}")
     print("==================================================")
 
 

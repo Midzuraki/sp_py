@@ -6,7 +6,7 @@ from src.bank_account.exceptions import (
     InsufficientFundsError
 )
 
-# Настройка логирования (только в файл logs/app.log с временной меткой)
+# Настройка логирования
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
@@ -26,7 +26,8 @@ class BankAccount:
             logger.error(f"Попытка создания счета с отрицательным балансом: {initial_balance} для {owner}")
             raise NegativeInitialBalanceError(f"Отрицательный баланс: {initial_balance}")
 
-        self.owner: str = owner
+        # ИСПРАВЛЕНО: сохраняем во внутреннее поле
+        self._owner: str = owner
         self._balance: float = initial_balance
         logger.info(f"Создан счет для {owner} с балансом {initial_balance} руб.")
 
@@ -51,8 +52,13 @@ class BankAccount:
         self._balance -= amount
         logger.info(f"[{self.owner}] Снятие: -{amount} руб. Текущий баланс: {self._balance} руб.")
 
-    def get_balance(self) -> float:
+    @property
+    def balance(self) -> float:
         return self._balance
+
+    @property
+    def owner(self) -> str:
+        return self._owner
 
     def __str__(self) -> str:
         return f"Счет ({self.owner}) | Текущий баланс: {self._balance:.2f} руб."
