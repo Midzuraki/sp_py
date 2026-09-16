@@ -34,5 +34,4 @@ if __name__ == "__main__":
     withdraw(200.0)
     print("Снято 200 руб.")
 
-
     withdraw(1500.0)
