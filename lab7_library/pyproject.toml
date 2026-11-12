@@ -1,0 +1,26 @@
+[project]
+name = "personal-library"
+version = "0.1.0"
+description = "Консольное приложение для учёта домашней библиотеки (JSON + TXT + CSV)"
+authors = [{name = "Student", email = "student@example.com"}]
+requires-python = ">=3.9"
+dependencies = []  # приложению нужна только стандартная библиотека
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]  # pip install -e ".[dev]" - всё для разработки одной командой
+
+[project.scripts]
+library = "library_app.cli:run"  # после установки доступна команда `library`
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]          # искать тесты только здесь (не в .venv/, build/ ...)
+pythonpath = ["src"]           # тесты видят пакет даже без установки
+python_files = "test_*.py"
+addopts = "-ra"

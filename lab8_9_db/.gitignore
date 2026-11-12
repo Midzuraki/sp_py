@@ -1,0 +1,18 @@
+# Виртуальное окружение
+.venv/
+
+# Кеши Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# IDE
+.idea/
+
+# Рабочие файлы БД (папка data/ остаётся в репозитории через .gitkeep).
+# Пишем data/*, а не data/ - иначе исключение !data/.gitkeep не сработает.
+data/*
+!data/.gitkeep
+*.db
+*.sqlite
+*.sqlite3

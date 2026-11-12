@@ -1,0 +1,16 @@
+# Виртуальное окружение и кеши
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+*.egg-info/
+
+# IDE
+.idea/
+
+# Рабочие данные и логи (папка logs/ сохраняется через .gitkeep)
+accounts_db.json
+logs/*
+!logs/.gitkeep
