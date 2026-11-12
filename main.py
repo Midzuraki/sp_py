@@ -1,7 +1,18 @@
-import sys
-from src.bank_account.storage import JsonStorage
+import os
+
 from src.bank_account.account import BankAccount
 from src.bank_account.exceptions import BankAccountError
+from src.bank_account.storage import JsonStorage
+
+
+def clear_screen() -> None:
+    """Очищает консоль (Windows: cls, Linux/macOS: clear)."""
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+def pause() -> None:
+    """Пауза, чтобы успеть прочитать результат операции."""
+    input("\nНажмите Enter, чтобы продолжить...")
 
 
 def get_positive_float(prompt_text: str) -> float:
@@ -22,6 +33,7 @@ def get_positive_float(prompt_text: str) -> float:
 
 def main() -> None:
     storage = JsonStorage()
+    clear_screen()
     print("\n=== ДОБРО ПОЖАЛОВАТЬ В СИСТЕМУ ЦЕНТРАЛЬНОГО БАНКА КИРИЕШЕК ===")
 
     owner = input("Введите имя владельца счета: ").strip()
@@ -47,8 +59,13 @@ def main() -> None:
 
         account = BankAccount(owner, init_bal)
         storage.save_account(account)
+        print("Счет создан.")
+
+    pause()
 
     while True:
+        clear_screen()
+        print(f"Счёт: {account.owner} | Баланс: {account.balance:.2f} руб.")
         print("\nДоступные операции:")
         print("1. Проверить баланс")
         print("2. Пополнить счет")
@@ -80,6 +97,10 @@ def main() -> None:
 
         except BankAccountError as e:
             print(f"Ошибка выполнения операции: {e}")
+
+        pause()
+
+    print("До свидания!")
 
 
 if __name__ == "__main__":
