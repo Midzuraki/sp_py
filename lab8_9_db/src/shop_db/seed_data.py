@@ -1,7 +1,3 @@
-"""Наполнение БД тестовыми данными через executemany.
-
-Запуск:  python -m shop_db.seed_data [путь_к_файлу_БД]
-"""
 import sqlite3
 import sys
 from pathlib import Path

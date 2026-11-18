@@ -1,4 +1,3 @@
-"""CRUD-операции и поиск. Путь к БД - параметр каждой функции, запросы - параметризованные."""
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union

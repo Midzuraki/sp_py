@@ -29,8 +29,7 @@ lab8_9_db/
 Поле-связка в дочерней: supplier_id INTEGER REFERENCES suppliers(id)
 ```
 
-**Шаг 4. Проектирование таблиц** (после шагов 1–4 я сдал README на проверку, как требует задание).
-
+**Шаг 4. Проектирование таблиц**
 *Родительская таблица `suppliers`:*
 
 | Имя поля | Тип | Ограничения | Назначение |
@@ -53,10 +52,6 @@ lab8_9_db/
 **Шаг 5. `init_db.py`.** Подключается к `data/myapp.db` (путь — параметр функции, значение по умолчанию в `config.py`; папка создаётся `Path.parent.mkdir(parents=True, exist_ok=True)`), выполняет `PRAGMA foreign_keys = ON;`, затем `CREATE TABLE IF NOT EXISTS` для родителя и потом для потомка, делает `commit()` и закрывает соединение.
 
 ```python
-"""Создание БД: сначала родительская таблица suppliers, затем дочерняя products.
-
-Запуск:  python -m shop_db.init_db [путь_к_файлу_БД]
-"""
 import sqlite3
 import sys
 from pathlib import Path
@@ -86,13 +81,12 @@ CREATE TABLE IF NOT EXISTS products (
 
 def init_db(db_path: Union[str, Path] = DEFAULT_DB_PATH) -> None:
     path = Path(db_path)
-    path.parent.mkdir(parents=True, exist_ok=True)  # папку data/ создаём сами
+    path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     try:
         cursor = conn.cursor()
-        # Настройка СОЕДИНЕНИЯ, а не файла БД: выполняется при каждом подключении
         cursor.execute("PRAGMA foreign_keys = ON;")
-        cursor.execute(CREATE_SUPPLIERS)  # родитель - первым, чтобы ссылка разрешилась
+        cursor.execute(CREATE_SUPPLIERS)  
         cursor.execute(CREATE_PRODUCTS)
         conn.commit()
     finally:

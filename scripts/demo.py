@@ -1,4 +1,5 @@
 """Демонстрация работы класса BankAccount из пакета src (запуск: python -m scripts.demo)."""
+
 from src.bank_account.account import BankAccount
 from src.bank_account.exceptions import BankAccountError
 

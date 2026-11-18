@@ -1,7 +1,3 @@
-"""Проверка ссылочной целостности: вставка товара с несуществующим supplier_id.
-
-Запуск:  python -m shop_db.check_integrity [путь_к_файлу_БД]
-"""
 import sqlite3
 import sys
 from pathlib import Path

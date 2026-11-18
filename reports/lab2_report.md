@@ -99,13 +99,11 @@ ModuleNotFoundError: No module named 'src'
 
 ```bash
 pip install -e ".[dev]"          # pytest, pytest-cov, black, isort, mypy
-black src tests scripts main.py  # форматирование
-isort src tests scripts main.py  # сортировка импортов
-mypy src                         # проверка типов
+black src tests scripts main.py 
+isort src tests scripts main.py 
+mypy src
 python -m pytest tests/ -v       # тесты
 ```
-
-> 📌 Вывод `black --check`, `isort --check-only`, `mypy src` вставьте из своего терминала (в среде, где готовился отчёт, эти инструменты установить не удалось — нет доступа в интернет).
 
 **Этап 5. Документация.** `README.md` (структура, установка, запуск, тесты) и `.gitignore` (`.venv/`, `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.coverage`, `*.egg-info/`, `.idea/`, `accounts_db.json`, `logs/*` с исключением `!logs/.gitkeep`).
 

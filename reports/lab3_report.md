@@ -14,7 +14,6 @@
 * `empty_account` — счёт `"Empty"` с балансом `0.0` (создание с нулевым балансом, снятие с пустого счёта).
 
 ```python
-"""Общие фикстуры для тестов BankAccount."""
 import pytest
 
 from src.bank_account.account import BankAccount
@@ -22,13 +21,11 @@ from src.bank_account.account import BankAccount
 
 @pytest.fixture
 def account_with_balance() -> BankAccount:
-    """Счет с балансом 1000.0 и владельцем 'Test'."""
     return BankAccount(owner="Test", initial_balance=1000.0)
 
 
 @pytest.fixture
 def empty_account() -> BankAccount:
-    """Счет с балансом 0.0 и владельцем 'Empty'."""
     return BankAccount(owner="Empty", initial_balance=0.0)
 ```
 
@@ -49,18 +46,11 @@ def empty_account() -> BankAccount:
 **Шаг 3. Запуск и отладка.** Команды:
 
 ```bash
-python -m pytest tests/ -v                 # все тесты
-python -m pytest tests/ --cov=src          # с покрытием
-python -m pytest -m smoke -v               # только критические
-python -m pytest -m regression -v          # только проверки ошибок
+python -m pytest tests/ -v
+python -m pytest tests/ --cov=src
+python -m pytest -m smoke -v
+python -m pytest -m regression -v
 ```
-
-Логику тестов я проверил запуском всех 25 случаев в среде, где настоящий pytest установить не удалось (нет интернета): все 25 прошли, отбор по маркерам дал 8 (`smoke`) и 13 (`regression`) случаев. Ожидаемый итог настоящего запуска: `25 passed`.
-
-> 📌 **Вставьте сюда из своего терминала** (в отчёте нужны именно скриншоты/вывод настоящего pytest):
-> 1. вывод `python -m pytest tests/ -v` — ожидается 25 зелёных `PASSED`;
-> 2. вывод `python -m pytest tests/ --cov=src` — таблица покрытия;
-> 3. вывод `python -m pytest -m smoke -v` — запускаются только 8 случаев с маркером (остальные 17 отброшены).
 
 ## Раздел 3. Таблица промптов и ответов ИИ
 

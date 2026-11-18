@@ -15,28 +15,16 @@
 5. **Ограничения выполнены:** только `subprocess`, `sys`, `time`, `os`, `shutil`; нет `os.system`, `os.popen`, `shell=True`; строка команды разбирается вручную по пробелам в список (`"cmd /c del /q *"` → `['cmd', '/c', 'del', '/q', '*']`); `FileNotFoundError` и таймаут не прерывают работу; код выхода 0, если успешна хотя бы одна команда, иначе 1.
 6. **Кодировка:** для системных утилит Windows (`cmd`, `findstr`, `ping`, `where`, `dir`, `type`, `timeout`) вывод читается в кодировке консоли — по умолчанию CP866; для остального — UTF-8; `errors="replace"` защищает от битых байтов.
 
-Код `lab6_runner/runner.py`:
-
 ```python
-"""ЛР6. Менеджер запуска внешних команд (модуль subprocess, ориентирован на Windows).
-
-Примеры:
-    python runner.py "python --version" "ping -n 2 8.8.8.8"
-    python runner.py --slow "ping -n 2 8.8.8.8" "ping -n 2 1.1.1.1" "python --version"
-Без аргументов запускается `python --version`.
-Код возврата: 0, если хотя бы одна команда успешна, иначе 1.
-Только стандартные модули: subprocess, sys, time, os, shutil. Без shell=True и os.system.
-"""
 import os
 import shutil
 import subprocess
 import sys
 import time
 
-TIMEOUT = 10  # секунд на каждую команду
+TIMEOUT = 10
 REPORT_FILE = "report.txt"
-PREVIEW_LEN = 200  # сколько символов stdout/stderr показывать в консоли
-# Системные утилиты Windows пишут в консольной кодировке CP866
+PREVIEW_LEN = 200
 SYSTEM_UTILS = {"cmd", "findstr", "ping", "where", "dir", "type", "timeout"}
 
 # Статусы
@@ -44,7 +32,6 @@ OK, ERROR, TIMED_OUT, NOT_FOUND = "успех", "ошибка", "таймаут"
 
 
 def parse_args(argv):
-    """Возвращает (список_команд, slow). Первым аргументом может быть --slow."""
     args = list(argv)
     slow = False
     if args and args[0] == "--slow":
@@ -57,36 +44,23 @@ def parse_args(argv):
 
 
 def split_command(cmd_str):
-    """Ручной разбор по пробелам: строка -> список аргументов (БЕЗ шелла).
-
-    "cmd /c del /q *" -> ["cmd", "/c", "del", "/q", "*"]. Метасимволы &, |, > остаются
-    обычными аргументами и не интерпретируются: список уходит прямо в CreateProcess/exec.
-    Ограничение: аргументы с пробелами внутри кавычек не поддерживаются.
-    """
     return cmd_str.split()
 
 
 def parse_codepage(text):
-    """Достаёт номер кодовой страницы из вывода `chcp` ("Active code page: 866" и т.п.)."""
     digits = "".join(ch for ch in text if ch.isdigit())
     return int(digits) if digits else None
 
 
-_console_encoding = None  # кеш: chcp запускаем один раз за работу
+_console_encoding = None
 
 
 def console_encoding():
-    """Кодировка вывода системных утилит Windows = активная кодовая страница консоли.
-
-    По умолчанию в русской Windows это CP866, а после `chcp 65001` - UTF-8, поэтому
-    жёстко «зашивать» cp866 нельзя. Любая неудача определения -> безопасный cp866.
-    """
     global _console_encoding
     if _console_encoding is None:
         _console_encoding = "cp866"
         try:
             raw = subprocess.run(["cmd", "/c", "chcp"], capture_output=True, timeout=5).stdout
-            # ASCII-часть вывода содержит номер страницы; русские слова игнорируем
             page = parse_codepage(raw.decode("ascii", errors="ignore"))
             if page == 65001:
                 _console_encoding = "utf-8"
@@ -98,7 +72,6 @@ def console_encoding():
 
 
 def pick_encoding(cmd):
-    """Системные утилиты Windows - кодировка консоли (обычно cp866), остальное - utf-8."""
     program = os.path.basename(cmd[0]).lower()
     if program.endswith(".exe"):
         program = program[:-4]
@@ -119,11 +92,10 @@ def make_result(cmd_str, status, returncode, stdout, stderr, elapsed):
 
 
 def run_command(cmd_str, timeout=TIMEOUT):
-    """Запуск одной команды через subprocess.run() с перехватом вывода."""
     cmd = split_command(cmd_str)
     encoding = pick_encoding(cmd)
     start = time.perf_counter()
-    if shutil.which(cmd[0]) is None:  # заранее проверяем наличие программы в PATH
+    if shutil.which(cmd[0]) is None:
         return make_result(
             cmd_str, NOT_FOUND, None, "", f"программа не найдена: {cmd[0]}",
             time.perf_counter() - start,
@@ -131,36 +103,29 @@ def run_command(cmd_str, timeout=TIMEOUT):
     try:
         done = subprocess.run(
             cmd,
-            capture_output=True,  # stdout=PIPE, stderr=PIPE
+            capture_output=True,
             text=True,
             encoding=encoding,
-            errors="replace",  # битые байты не роняют скрипт
+            errors="replace",
             timeout=timeout,
-            check=True,  # код != 0 -> CalledProcessError
+            check=True,
         )
         status, code, out, err = OK, done.returncode, done.stdout, done.stderr
     except FileNotFoundError:
         status, code, out, err = NOT_FOUND, None, "", f"программа не найдена: {cmd[0]}"
     except subprocess.TimeoutExpired:
-        # run() сам убивает процесс и вызывает wait() перед тем, как поднять исключение
         status, code, out, err = TIMED_OUT, None, "", f"таймаут {timeout} сек"
     except subprocess.CalledProcessError as exc:
         status, code = ERROR, exc.returncode
         out = exc.stdout if isinstance(exc.stdout, str) else ""
         err = exc.stderr if isinstance(exc.stderr, str) else ""
-    except OSError as exc:  # например, PermissionError
+    except OSError as exc:
         status, code, out, err = ERROR, None, "", f"не удалось запустить: {exc}"
     return make_result(cmd_str, status, code, out, err, time.perf_counter() - start)
 
 
 def run_parallel(cmds, timeout=TIMEOUT):
-    """Параллельный запуск через Popen: сначала стартуем ВСЕ, потом опрашиваем poll().
-
-    Вывод пишем во временные файлы, а не в PIPE: тогда процесс никогда не блокируется
-    на переполненном буфере трубы, пока мы опрашиваем другие процессы, и мы можем
-    засечь реальное время завершения каждой команды.
-    """
-    jobs = []  # словари с состоянием каждой команды
+    jobs = []
     for index, cmd_str in enumerate(cmds):
         cmd = split_command(cmd_str)
         job = {"cmd_str": cmd_str, "cmd": cmd, "result": None, "proc": None,
@@ -189,7 +154,7 @@ def run_parallel(cmds, timeout=TIMEOUT):
                 if job["result"] is not None:
                     continue
                 proc, elapsed = job["proc"], time.perf_counter() - job["t0"]
-                code = proc.poll()  # None - ещё работает
+                code = proc.poll()
                 if code is not None:
                     status = OK if code == 0 else ERROR
                     job["result"] = make_result(
@@ -198,12 +163,12 @@ def run_parallel(cmds, timeout=TIMEOUT):
                         read(job["err_path"], job["encoding"]), elapsed)
                 elif elapsed > timeout:
                     proc.kill()
-                    proc.wait()  # после kill() обязательно ждём завершения
+                    proc.wait()
                     job["result"] = make_result(job["cmd_str"], TIMED_OUT, None, "",
                                                 f"таймаут {timeout} сек", elapsed)
             time.sleep(0.01)
     finally:
-        for job in jobs:  # убираем временные файлы
+        for job in jobs:
             for key in ("out_path", "err_path"):
                 if os.path.exists(job[key]):
                     os.remove(job[key])
@@ -216,11 +181,10 @@ def _preview(text, full):
         return "(пусто)"
     if not full and len(text) > PREVIEW_LEN:
         text = text[:PREVIEW_LEN] + "…"
-    return text.replace("\n", "\n        ")  # выравниваем продолжение строк
+    return text.replace("\n", "\n        ")
 
 
 def format_report(results, total_time, slow, full=False):
-    """Текст отчёта. full=False - превью по 200 символов (консоль), True - целиком (файл)."""
     system = "Windows" if os.name == "nt" else "POSIX"
     lines = [
         f"=== Менеджер запуска команд ({system}) ===",
@@ -252,12 +216,12 @@ def format_report(results, total_time, slow, full=False):
 
 
 def save_report(text, path=REPORT_FILE):
-    with open(path, "w", encoding="utf-8") as f:  # кодировку указываем явно
+    with open(path, "w", encoding="utf-8") as f:
         f.write(text + "\n")
 
 
 def main(argv=None):
-    for stream in (sys.stdout, sys.stderr):  # русский текст в консоли без кракозябр
+    for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
     cmds, slow = parse_args(sys.argv[1:] if argv is None else argv)
@@ -278,10 +242,6 @@ def main(argv=None):
 if __name__ == "__main__":
     main()
 ```
-
-### Результаты тестирования
-
-> ℹ️ Отчёт готовился в среде Linux, поэтому реальный вывод ниже получен на Linux-аналогах сценариев из задания: `false` вместо `cmd /c exit 1`, `sleep 20` вместо `ping -n 20 127.0.0.1`, `sleep 2` вместо `ping -n 2`, `echo` вместо `cmd /c dir`. Логика программы от ОС не зависит; разница только в ветке кодировки (`os.name == "nt"`). Windows-сценарии указаны в блоке 📌 ниже.
 
 ```text
 ### Запуск 1: обычный режим (успех, нет программы, ненулевой код, русский вывод)
@@ -487,10 +447,6 @@ stderr: программа не найдена: no_such_cmd_1
 Общее время: 0.00 сек
 ```
 
-**Что подтверждают запуски.** Успех/ошибка/таймаут/«не найдена» различаются статусом и кодом возврата; программа не останавливается на проблемной команде; таймаут срабатывает через 10 с; в режиме `--slow` три команды ушли параллельно, общее время ≈ 2 с (последовательно те же команды — 4 с), а время каждой команды измеряется отдельно (`python --version` — 0.01 с, а не 2 с); без аргументов запускается `python --version` с предупреждением; если все команды провалены — код возврата 1; временные файлы параллельного режима удаляются; `report.txt` содержит полный отчёт в UTF-8.
-
-**Вспомогательные эксперименты (реальный вывод)** — безопасность, кодировки, `which`, взаимная блокировка труб, `kill()` без `wait()`, `check=True`:
-
 ```text
 ### 1. split_command: опасная строка разбирается в СПИСОК, шелл не участвует
 ['cmd', '/c', 'del', '/q', '*']
@@ -525,16 +481,6 @@ communicate(): stdout='конец', длина stderr=300000, код=0
 ### 7. check=True и CalledProcessError
 CalledProcessError: returncode = 1 | cmd = ['false']
 ```
-
-> 📌 **Выполните на Windows и вставьте вывод** (эти сценарии из раздела 5 задания на Linux не воспроизводятся):
-> ```
-> chcp 65001
-> python runner.py "python --version" "ping -n 2 8.8.8.8" "nonexistent_program_123"
-> python runner.py "ping -n 20 127.0.0.1"              (таймаут 10 с)
-> python runner.py --slow "ping -n 2 8.8.8.8" "ping -n 2 1.1.1.1" "python --version"
-> python runner.py "cmd /c dir"                        (русские буквы читаются корректно)
-> python runner.py "cmd /c exit 1"                     (статус «ошибка», код 1)
-> ```
 
 ## Раздел 3. Таблица промптов и ответов ИИ
 

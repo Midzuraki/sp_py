@@ -76,7 +76,9 @@ def main() -> None:
 
         try:
             if choice == "1":
-                print(f"\nТекущий баланс счета {account.owner}: {account.balance:.2f} руб.")
+                print(
+                    f"\nТекущий баланс счета {account.owner}: {account.balance:.2f} руб."
+                )
 
             elif choice == "2":
                 amount = get_positive_float("Введите сумму для пополнения: ")

@@ -1,4 +1,5 @@
 """JSON-хранилище балансов счетов."""
+
 import json
 from pathlib import Path
 from typing import Any, Dict, Optional, Union

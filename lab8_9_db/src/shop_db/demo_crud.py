@@ -1,4 +1,3 @@
-"""Демонстрация CRUD и поиска на временной копии БД (запуск: python -m shop_db.demo_crud)."""
 import shutil
 import tempfile
 from pathlib import Path

@@ -1,7 +1,3 @@
-"""Создание БД: сначала родительская таблица suppliers, затем дочерняя products.
-
-Запуск:  python -m shop_db.init_db [путь_к_файлу_БД]
-"""
 import sqlite3
 import sys
 from pathlib import Path

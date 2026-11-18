@@ -1,4 +1,5 @@
 """Тесты класса BankAccount (ЛР3): фикстуры, параметризация, маркеры."""
+
 import pytest
 
 from src.bank_account.account import BankAccount
@@ -43,7 +44,9 @@ def test_create_account_negative_balance_raises_error():
     "deposit_amount, expected_balance",
     [(500.0, 1500.0), (0.01, 1000.01), (10000.0, 11000.0)],
 )
-def test_deposit_positive_amount(account_with_balance, deposit_amount, expected_balance):
+def test_deposit_positive_amount(
+    account_with_balance, deposit_amount, expected_balance
+):
     """Пополнение: допустимые суммы."""
     account_with_balance.deposit(deposit_amount)
     assert account_with_balance.balance == pytest.approx(expected_balance)

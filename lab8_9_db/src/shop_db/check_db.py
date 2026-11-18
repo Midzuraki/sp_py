@@ -1,7 +1,3 @@
-"""Проверка структуры БД: внешние ключи, таблицы, поля, внешние ключи дочерней таблицы.
-
-Запуск:  python -m shop_db.check_db [путь_к_файлу_БД]
-"""
 import sqlite3
 import sys
 from pathlib import Path

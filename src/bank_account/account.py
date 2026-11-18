@@ -1,4 +1,5 @@
 """Класс BankAccount: бизнес-логика счета, валидация и логирование операций."""
+
 import logging
 
 from src.bank_account.exceptions import (
@@ -80,6 +81,4 @@ class BankAccount:
 
     def __repr__(self) -> str:
         """Однозначное представление (для разработчика и отладки)."""
-        return (
-            f"BankAccount(owner={self._owner!r}, initial_balance={self._balance!r})"
-        )
+        return f"BankAccount(owner={self._owner!r}, initial_balance={self._balance!r})"
