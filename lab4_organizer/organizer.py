@@ -1,14 +1,6 @@
-"""ЛР4. Автоматический «Уборщик» файловой системы (только модули os и sys).
-
-Запуск:
-    python organizer.py [путь_к_папке]
-Если путь не указан, берётся текущая рабочая директория.
-Код возврата: 0 - всё в порядке, 1 - путь не существует / не папка.
-"""
 import os
 import sys
 
-# Категории и расширения (в нижнем регистре, с точкой)
 CATEGORIES = {
     "Documents": {".txt", ".pdf", ".docx", ".md"},
     "Images": {".jpg", ".jpeg", ".png", ".gif", ".bmp"},
@@ -16,16 +8,11 @@ CATEGORIES = {
     "Video": {".mp4", ".avi", ".mkv", ".mov"},
     "Archives": {".zip", ".rar", ".7z", ".tar", ".gz"},
 }
-OTHER = "Other"  # всё, что не попало в категории выше
+OTHER = "Other"
 SERVICE_FILES = {".DS_Store", "Thumbs.db", "desktop.ini"}
 
 
 def get_target_directory() -> str:
-    """Разбор sys.argv: путь к папке или текущая директория, если аргумента нет.
-
-    Если путь содержит пробелы и пользователь забыл кавычки, shell разобьёт его
-    на несколько аргументов - склеиваем их обратно через пробел.
-    """
     if len(sys.argv) > 1:
         path = " ".join(sys.argv[1:])
     else:
@@ -34,7 +21,6 @@ def get_target_directory() -> str:
 
 
 def get_category(filename: str) -> str:
-    """Определяет категорию по расширению (регистр не важен)."""
     extension = os.path.splitext(filename)[1].lower()
     for category, extensions in CATEGORIES.items():
         if extension in extensions:
@@ -43,7 +29,6 @@ def get_category(filename: str) -> str:
 
 
 def free_name(directory: str, filename: str) -> str:
-    """Подбирает свободное имя: name.ext -> name_1.ext -> name_2.ext ..."""
     base, extension = os.path.splitext(filename)
     candidate = filename
     counter = 0
@@ -54,12 +39,6 @@ def free_name(directory: str, filename: str) -> str:
 
 
 def safe_move(src: str, dst_dir: str) -> tuple:
-    """Перемещает файл в dst_dir, не перезаписывая существующие файлы.
-
-    Возвращает (успех, итоговое_имя, было_переименование).
-    os.rename не работает между разными дисками - такая ошибка (OSError)
-    перехватывается, файл считается пропущенным.
-    """
     original_name = os.path.basename(src)
     new_name = free_name(dst_dir, original_name)
     try:
@@ -71,7 +50,6 @@ def safe_move(src: str, dst_dir: str) -> tuple:
 
 
 def list_files(directory: str) -> list:
-    """Только файлы верхнего уровня (подкаталоги не трогаем), без служебных."""
     script_name = os.path.basename(__file__)
     files = []
     for name in sorted(os.listdir(directory)):
@@ -85,7 +63,6 @@ def list_files(directory: str) -> list:
 
 
 def categorize_files(directory: str) -> dict:
-    """Создаёт папки категорий и раскладывает файлы. Возвращает статистику."""
     stats = {
         "moved": {category: 0 for category in [*CATEGORIES, OTHER]},
         "skipped": 0,
@@ -129,7 +106,7 @@ def main() -> None:
         sys.exit(1)
     if not list_files(directory):
         print(f"В директории нет файлов для обработки: {directory}")
-        return  # подкаталоги не создаём, код возврата 0
+        return
     try:
         stats = categorize_files(directory)
     except OSError as error:
