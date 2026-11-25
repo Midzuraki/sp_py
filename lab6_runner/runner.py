@@ -1,11 +1,14 @@
 import os
+from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
 import time
 
 TIMEOUT = 10
-REPORT_FILE = "report.txt"
+BASE_DIR = Path(__file__).resolve().parent
+REPORT_FILE = BASE_DIR / "report.txt"
 PREVIEW_LEN = 200
 SYSTEM_UTILS = {"cmd", "findstr", "ping", "where", "dir", "type", "timeout"}
 
@@ -25,7 +28,9 @@ def parse_args(argv):
 
 
 def split_command(cmd_str):
-    return cmd_str.split()
+    if os.name == "nt":
+        return [arg.strip("\"'") for arg in shlex.split(cmd_str, posix=False)]
+    return shlex.split(cmd_str)
 
 
 def parse_codepage(text):
@@ -197,6 +202,8 @@ def format_report(results, total_time, slow, full=False):
 
 
 def save_report(text, path=REPORT_FILE):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text + "\n")
 
