@@ -19,16 +19,25 @@ def main() -> None:
         print("Внимание: обе папки на одной файловой системе - ошибка не воспроизведётся.")
 
     print(f"Источник : {dir_a}\nНазначение: {dir_b}\n")
+
     for method in ("Path.rename", "shutil.move"):
         src = dir_a / f"demo_{method.split('.')[0]}.txt"
-        src.write_text("демо", encoding="utf-8")
         dst = dir_b / src.name
+
+        if not src.exists():
+            print(f"{method:<12}: Исходный файл {src.name} не найден в {dir_a}")
+            continue
+
+        if dst.exists():
+            print(f"{method:<12}: Пропущено, {dst.name} уже существует в {dir_b}")
+            continue
+
         try:
             if method == "Path.rename":
                 src.rename(dst)
             else:
                 shutil.move(str(src), str(dst))
-            print(f"{method:<12}: OK, файл теперь в {dst}")
+            print(f"{method:<12}: OK, файл перенесён в {dst}")
         except OSError as error:
             print(f"{method:<12}: OSError -> {error}")
 
