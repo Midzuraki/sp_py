@@ -27,13 +27,12 @@ CREATE TABLE IF NOT EXISTS products (
 
 def init_db(db_path: Union[str, Path] = DEFAULT_DB_PATH) -> None:
     path = Path(db_path)
-    path.parent.mkdir(parents=True, exist_ok=True)  # папку data/ создаём сами
+    path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     try:
         cursor = conn.cursor()
-        # Настройка СОЕДИНЕНИЯ, а не файла БД: выполняется при каждом подключении
         cursor.execute("PRAGMA foreign_keys = ON;")
-        cursor.execute(CREATE_SUPPLIERS)  # родитель - первым, чтобы ссылка разрешилась
+        cursor.execute(CREATE_SUPPLIERS)
         cursor.execute(CREATE_PRODUCTS)
         conn.commit()
     finally:

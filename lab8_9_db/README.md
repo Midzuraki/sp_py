@@ -82,7 +82,7 @@ python -m venv .venv
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -e .                     # чтобы работал `python -m shop_db...` из любой папки
 
-python -m shop_db.init_db            # создать БД и таблицы   -> data/myapp.db
+python -m shop_db.init_db            # создать БД и таблицы   -> data/shop_db.db
 python -m shop_db.check_db           # структура: PRAGMA table_info / foreign_key_list
 python -m shop_db.check_integrity    # вставка с несуществующим supplier_id
 python -m shop_db.seed_data          # тестовые данные (executemany)

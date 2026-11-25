@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "SQLite: две связанные таблицы (поставщики и товары), CRUD через Python"
 authors = [{name = "Student", email = "student@example.com"}]
 requires-python = ">=3.9"
-dependencies = []  # sqlite3 входит в стандартную библиотеку
+dependencies = []
 
 [build-system]
 requires = ["setuptools>=61.0"]
