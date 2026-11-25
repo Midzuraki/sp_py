@@ -123,7 +123,7 @@ def organize(directory: Path, dry_run: bool = False, verbose: bool = False) -> D
 
 def print_report(directory: Path, stats: Dict, dry_run: bool) -> None:
     if dry_run:
-        print("Ничего не изменено (режим dry-run).")
+        print("Ничего не изменено")
         return
     print(f"Обработка директории: {directory}")
     for category, count in stats["moved"].items():
