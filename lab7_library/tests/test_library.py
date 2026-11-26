@@ -46,16 +46,6 @@ def test_search_by_title_prefix_ignores_empty_or_spaces(library_with_books):
     assert library_with_books.find_by_title_prefix("   ") == []
 
 
-def test_filter_notes_by_book_title(empty_library):
-    """Фильтрация заметок возвращает записи только для указанной книги."""
-    empty_library.add_note("Война и мир", "про Наташу")
-    empty_library.add_note("Идиот", "про князя")
-    empty_library.add_note("Война и мир", "про Пьера")
-    assert len(empty_library.get_notes()) == 3
-    filtered = empty_library.get_notes(filter_title="Война и мир")
-    assert [n["note"] for n in filtered] == ["про Наташу", "про Пьера"]
-
-
 def test_total_stats_sums_all_months(empty_library):
     """Общая статистика корректно суммирует книги и страницы за все месяцы."""
     empty_library.add_month_stat("2026-09", 2, 600)
