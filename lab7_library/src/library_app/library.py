@@ -25,6 +25,15 @@ class Library:
             self.save()
         return removed
 
+    def get_book_by_title(self, title: str) -> Optional[Book]:
+        needle = title.strip().casefold()
+        if not needle:
+            return None
+        for book in self.books:
+            if book.title.casefold() == needle:
+                return book
+        return None
+
     def find_by_author(self, author: str) -> List[Book]:
         needle = author.strip().casefold()
         if not needle:
@@ -50,7 +59,10 @@ class Library:
         self.books = [Book.from_dict(d) for d in storage.load_books_json(self.books_file)]
 
     def add_note(self, title: str, note: str) -> None:
-        storage.append_note(self.notes_file, title, note)
+        book = self.get_book_by_title(title)
+        if book is None:
+            raise ValueError(f"Книга «{title}» не найдена в библиотеке.")
+        storage.append_note(self.notes_file, book.title, note)
 
     def get_notes(self, filter_title: Optional[str] = None) -> List[Dict[str, str]]:
         notes = storage.read_all_notes(self.notes_file)

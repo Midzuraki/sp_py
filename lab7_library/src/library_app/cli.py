@@ -105,23 +105,34 @@ class UserInterface:
             self.say(f"{number}. {book}")
 
     def add_book(self) -> None:
-        title = self.ask_text("Название: ")
-        author = self.ask_text("Автор: ")
-        current_year = datetime.now().year
-        year = self.ask_int("Год издания: ", minimum=1, maximum=current_year)
-        genre = self.ask_text("Жанр: ")
-        pages = self.ask_int("Количество страниц: ", minimum=1)
-        status = self.ask_status()
-        rating = self.ask_rating()
-        try:
-            self.library.add_book(Book(title, author, year, genre, pages, status, rating))
-        except ValueError as error:
-            self.say(f"Ошибка: {error}")
-            return
+        while True:
+            title = self.ask_text("Название: ")
+            author = self.ask_text("Автор: ")
+            current_year = datetime.now().year
+            year = self.ask_int("Год издания: ", minimum=1, maximum=current_year)
+            genre = self.ask_text("Жанр: ")
+            pages = self.ask_int("Количество страниц: ", minimum=1)
+            status = self.ask_status()
+            rating = self.ask_rating() if status == STATUS_READ else None
+            try:
+                self.library.add_book(Book(title, author, year, genre, pages, status, rating))
+                break
+            except ValueError as error:
+                self.say(f"Ошибка: {error}. Попробуйте снова.")
         self.say("Книга добавлена.")
 
     def add_note(self) -> None:
-        self.library.add_note(self.ask_text("Название книги: "), self.ask_text("Заметка: "))
+        while True:
+            title = self.ask("Название книги (Enter - выход): ").strip()
+            if not title:
+                return
+            book = self.library.get_book_by_title(title)
+            if book is not None:
+                break
+            self.say("Ошибка: книга с таким названием не найдена. Попробуйте снова.")
+
+        note = self.ask_text("Заметка: ")
+        self.library.add_note(book.title, note)
         self.say("Заметка сохранена.")
 
     def show_notes(self) -> None:
@@ -146,11 +157,28 @@ class UserInterface:
         self.say(f"ВСЕГО: книг {total['books_read']}, страниц {total['pages_read']}")
 
     def remove_book(self) -> None:
-        title = self.ask_text("Название книги для удаления: ")
-        if self.library.remove_book(title):
-            self.say("Книга удалена.")
-        else:
-            self.say("Книга с таким названием не найдена.")
+        self.show_books(self.library.books)
+        if not self.library.books:
+            return
+        while True:
+            title = self.ask("Название книги для удаления (Enter - выход): ").strip()
+            if not title:
+                return
+            book = self.library.get_book_by_title(title)
+            if book is not None:
+                break
+            self.say("Ошибка: книга с таким названием не найдена. Попробуйте снова.")
+
+        while True:
+            confirm = self.ask(f'Вы точно хотите удалить книгу "{book.title}"? (y/n): ').strip().lower()
+            if confirm == "y":
+                self.library.remove_book(book.title)
+                self.say("Книга удалена.")
+                return
+            if confirm == "n":
+                self.say("Удаление отменено.")
+                return
+            self.say("Ошибка: введите y или n.")
 
     def loop(self) -> None:
         actions = {
