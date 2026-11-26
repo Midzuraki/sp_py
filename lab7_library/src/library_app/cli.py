@@ -1,18 +1,18 @@
-"""Консольное меню. Вся логика данных - в Library, здесь только ввод/вывод."""
+from datetime import datetime
 import os
 from pathlib import Path
+import re
 from typing import Callable, List, Optional
 
 from library_app.library import Library
 from library_app.models import STATUS_READ, STATUS_READING, STATUS_UNREAD, Book
 
-# .../src/library_app/cli.py -> корень проекта -> data/ (можно переопределить переменной)
 DEFAULT_DATA_DIR = Path(
     os.environ.get("LIBRARY_DATA_DIR", Path(__file__).resolve().parents[2] / "data")
 )
 
 MENU = """
-=== ЛИЧНАЯ БИБЛИОТЕКА ===
+=== meow ===
 1. Добавить книгу
 2. Показать все книги
 3. Найти по автору
@@ -28,7 +28,6 @@ STATUS_CHOICES = {"1": STATUS_UNREAD, "2": STATUS_READING, "3": STATUS_READ}
 
 
 class UserInterface:
-    """Ввод и вывод передаются параметрами - так меню можно проверить без клавиатуры."""
 
     def __init__(
         self,
@@ -40,7 +39,6 @@ class UserInterface:
         self.ask = input_func
         self.say = output_func
 
-    # ----- безопасный ввод -----
     def ask_text(self, prompt: str) -> str:
         while True:
             value = self.ask(prompt).strip()
@@ -48,7 +46,9 @@ class UserInterface:
                 return value
             self.say("Ошибка: строка не может быть пустой.")
 
-    def ask_int(self, prompt: str, minimum: Optional[int] = None) -> int:
+    def ask_int(
+        self, prompt: str, minimum: Optional[int] = None, maximum: Optional[int] = None
+    ) -> int:
         while True:
             try:
                 value = int(self.ask(prompt).strip())
@@ -58,6 +58,44 @@ class UserInterface:
             if minimum is not None and value < minimum:
                 self.say(f"Ошибка: число должно быть не меньше {minimum}.")
                 continue
+            if maximum is not None and value > maximum:
+                self.say(f"Ошибка: число должно быть не больше {maximum}.")
+                continue
+            return value
+
+    def ask_status(self) -> str:
+        self.say("Статус: 1 - не прочитана, 2 - читаю, 3 - прочитана")
+        while True:
+            raw = self.ask("Выберите статус (Enter = 1): ").strip()
+            if not raw:
+                return STATUS_UNREAD
+            if raw in STATUS_CHOICES:
+                return STATUS_CHOICES[raw]
+            self.say("Ошибка: введите 1, 2, 3 или нажмите Enter.")
+
+    def ask_rating(self) -> Optional[int]:
+        while True:
+            raw = self.ask("Оценка 1-5 (Enter - без оценки): ").strip()
+            if not raw:
+                return None
+            try:
+                value = int(raw)
+                if 1 <= value <= 5:
+                    return value
+            except ValueError:
+                pass
+            self.say("Ошибка: введите целое число от 1 до 5 или нажмите Enter.")
+
+    def ask_month(self, prompt: str) -> str:
+        current_month = datetime.now().strftime("%Y-%m")
+        while True:
+            value = self.ask(prompt).strip()
+            if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", value) or value.startswith("0000"):
+                self.say("Ошибка: введите месяц в формате ГГГГ-ММ (например, 2000-01).")
+                continue
+            if value > current_month:
+                self.say(f"Ошибка: месяц не может быть больше текущего ({current_month}).")
+                continue
             return value
 
     def show_books(self, books: List[Book]) -> None:
@@ -66,25 +104,18 @@ class UserInterface:
         for number, book in enumerate(books, start=1):
             self.say(f"{number}. {book}")
 
-    # ----- пункты меню -----
     def add_book(self) -> None:
         title = self.ask_text("Название: ")
         author = self.ask_text("Автор: ")
-        year = self.ask_int("Год издания: ", minimum=1)
+        current_year = datetime.now().year
+        year = self.ask_int("Год издания: ", minimum=1, maximum=current_year)
         genre = self.ask_text("Жанр: ")
         pages = self.ask_int("Количество страниц: ", minimum=1)
-        self.say("Статус: 1 - не прочитана, 2 - читаю, 3 - прочитана")
-        status = STATUS_CHOICES.get(self.ask("Выберите статус (Enter = 1): ").strip(), STATUS_UNREAD)
-        rating: Optional[int] = None
-        raw_rating = self.ask("Оценка 1-5 (Enter - без оценки): ").strip()
-        if raw_rating:
-            try:
-                rating = int(raw_rating)
-            except ValueError:
-                self.say("Оценка не распознана - книга сохранена без оценки.")
+        status = self.ask_status()
+        rating = self.ask_rating()
         try:
             self.library.add_book(Book(title, author, year, genre, pages, status, rating))
-        except ValueError as error:  # неверный статус/рейтинг
+        except ValueError as error:
             self.say(f"Ошибка: {error}")
             return
         self.say("Книга добавлена.")
@@ -102,7 +133,7 @@ class UserInterface:
             self.say(f"[{note['date']}] «{note['title']}»: {note['note']}")
 
     def add_month_stat(self) -> None:
-        month = self.ask_text("Месяц (например, 2026-11): ")
+        month = self.ask_month("Месяц (например, 2026-11): ")
         books = self.ask_int("Прочитано книг: ", minimum=0)
         pages = self.ask_int("Прочитано страниц: ", minimum=0)
         self.library.add_month_stat(month, books, pages)
@@ -150,7 +181,6 @@ class UserInterface:
 
 
 def run(data_dir: Optional[Path] = None) -> None:
-    """Запуск приложения: загрузка -> меню -> сохранение при выходе."""
     library = Library(data_dir or DEFAULT_DATA_DIR)
     library.load()
     ui = UserInterface(library)
@@ -159,5 +189,5 @@ def run(data_dir: Optional[Path] = None) -> None:
     except (KeyboardInterrupt, EOFError):
         print("\nПрервано пользователем.")
     finally:
-        library.save()  # при выходе - всегда сохраняем
+        library.save()
         print("Данные сохранены. До свидания!")

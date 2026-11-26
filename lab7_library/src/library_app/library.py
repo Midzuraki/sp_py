@@ -1,4 +1,3 @@
-"""Бизнес-логика: класс Library. Сам с файлами не работает - зовёт модуль storage."""
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -14,13 +13,11 @@ class Library:
         self.stats_file = self.data_dir / "stats.csv"
         self.books: List[Book] = []
 
-    # ----- книги -----
     def add_book(self, book: Book) -> None:
         self.books.append(book)
-        self.save()  # сразу сохраняем
+        self.save()
 
     def remove_book(self, title: str) -> bool:
-        """Удаляет все книги с таким названием (без учёта регистра)."""
         before = len(self.books)
         self.books = [b for b in self.books if b.title.casefold() != title.casefold()]
         removed = len(self.books) != before
@@ -29,21 +26,29 @@ class Library:
         return removed
 
     def find_by_author(self, author: str) -> List[Book]:
-        needle = author.casefold()
-        return [b for b in self.books if needle in b.author.casefold()]
+        needle = author.strip().casefold()
+        if not needle:
+            return []
+        return [b for b in self.books if b.author.casefold().startswith(needle)]
 
     def find_by_genre(self, genre: str) -> List[Book]:
-        needle = genre.casefold()
-        return [b for b in self.books if needle in b.genre.casefold()]
+        needle = genre.strip().casefold()
+        if not needle:
+            return []
+        return [b for b in self.books if b.genre.casefold().startswith(needle)]
+
+    def find_by_title_prefix(self, prefix: str) -> List[Book]:
+        needle = prefix.strip().casefold()
+        if not needle:
+            return []
+        return [b for b in self.books if b.title.casefold().startswith(needle)]
 
     def save(self) -> None:
         storage.save_books_json([b.to_dict() for b in self.books], self.books_file)
 
     def load(self) -> None:
-        """Загружает книги из JSON и восстанавливает объекты Book."""
         self.books = [Book.from_dict(d) for d in storage.load_books_json(self.books_file)]
 
-    # ----- заметки -----
     def add_note(self, title: str, note: str) -> None:
         storage.append_note(self.notes_file, title, note)
 
@@ -53,7 +58,6 @@ class Library:
             return notes
         return [n for n in notes if n["title"].casefold() == filter_title.casefold()]
 
-    # ----- статистика -----
     def add_month_stat(self, month: str, books_read: int, pages_read: int) -> None:
         storage.append_month_stat(self.stats_file, month, books_read, pages_read)
 

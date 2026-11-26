@@ -1,4 +1,5 @@
-"""Модель данных: класс Book."""
+"""класс Book"""
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 STATUS_UNREAD = "не прочитана"
@@ -18,10 +19,17 @@ class Book:
         status: str = STATUS_UNREAD,
         rating: Optional[int] = None,
     ) -> None:
+        current_year = datetime.now().year
+        if not isinstance(year, int) or isinstance(year, bool) or not (1 <= year <= current_year):
+            raise ValueError(f"Год издания должен быть целым числом от 1 до {current_year}")
         if status not in STATUSES:
             raise ValueError(f"Статус должен быть одним из: {', '.join(STATUSES)}")
-        if rating is not None and not (isinstance(rating, int) and 1 <= rating <= 5):
+        if rating is not None and not (
+            isinstance(rating, int) and not isinstance(rating, bool) and 1 <= rating <= 5
+        ):
             raise ValueError("Рейтинг должен быть целым числом от 1 до 5 или None")
+        if rating is not None and status != STATUS_READ:
+            raise ValueError("Оценку можно поставить только прочитанной книге")
         self.title = title
         self.author = author
         self.year = year
@@ -31,7 +39,6 @@ class Book:
         self.rating = rating
 
     def to_dict(self) -> Dict[str, Any]:
-        """Объект -> словарь (для сохранения в JSON)."""
         return {
             "title": self.title,
             "author": self.author,
@@ -44,7 +51,6 @@ class Book:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Book":
-        """Словарь -> объект. Отсутствующие status/rating получают значения по умолчанию."""
         return cls(
             title=data["title"],
             author=data["author"],
@@ -63,7 +69,8 @@ class Book:
     def __str__(self) -> str:
         text = f"«{self.title}» — {self.author} ({self.year}) [{self.status}]"
         if self.rating:
-            text += " " + "★" * self.rating
+            stars = "★" * self.rating + "☆" * (5 - self.rating)
+            text += f" {stars}"
         return text
 
     def __repr__(self) -> str:

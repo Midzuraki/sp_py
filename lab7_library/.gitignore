@@ -1,8 +1,5 @@
-# Виртуальное окружение
 .venv/
 venv/
-
-# Кеши Python и pytest
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -10,13 +7,7 @@ __pycache__/
 *.egg-info/
 build/
 dist/
-
-# IDE
 .idea/
 .vscode/
-
-# Рабочие файлы данных (саму папку data/ сохраняем через .gitkeep).
-# Важно: именно "data/*", а не "data/" - иначе Git игнорирует папку целиком
-# и исключение "!data/.gitkeep" не сработает.
 data/*
 !data/.gitkeep

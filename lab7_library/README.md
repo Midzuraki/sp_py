@@ -1,10 +1,4 @@
-# Личная библиотека 📚 (ЛР7)
-
-Консольное приложение для учёта домашней библиотеки. Три формата хранения:
-**JSON** (каталог книг), **TXT** (заметки и рецензии), **CSV** (статистика чтения по месяцам).
-Покрыто автотестами на **pytest**.
-
-## Структура проекта
+## Структура
 
 ```
 lab7_library/
@@ -54,10 +48,10 @@ lab7_library/
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"            # приложение в режиме редактирования + pytest
-python main.py                     # или просто: library
-python -m pytest -v                # все тесты
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+python main.py
+python -m pytest -v
 ```
 
 Папку с данными можно переопределить переменной окружения `LIBRARY_DATA_DIR`.
